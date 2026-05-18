@@ -21,7 +21,10 @@ module.exports = async function handler(req, res) {
       }],
     });
 
-    res.status(200).json({ result: message.content[0].text });
+    const text = message.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : text;
+    res.status(200).json({ result: cleanJson });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

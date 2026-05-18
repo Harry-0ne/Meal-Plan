@@ -56,11 +56,7 @@ async function callMealPlanAPI(data) {
   }
 
   const json = await res.json();
-  let text = json.result.trim();
-  if (text.startsWith('```')) {
-    text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-  }
-  return JSON.parse(text);
+  return JSON.parse(json.result);
 }
 
 // ── Components ──────────────────────────────────────────────────────────────
