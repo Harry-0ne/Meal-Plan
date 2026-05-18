@@ -14,10 +14,26 @@ module.exports = async function handler(req, res) {
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 4000,
+      max_tokens: 8000,
       messages: [{
         role: 'user',
-        content: `You are a nutrition coach. Generate a 7-day meal plan for a ${age} year old, ${weight}lbs, goal: ${goal}. Daily calories: ${calories}. Dietary restrictions: ${restrictions}. Foods they hate: ${dislikes}. For each day provide breakfast, lunch, dinner and a snack. For each meal include name, ingredients, instructions (3-4 steps), and macros. Return as JSON only.`,
+        content: `You are a nutrition coach. Generate a 7-day meal plan as JSON only, no other text. For a ${age} year old, ${weight}lbs, goal: ${goal}, ${calories} calories/day. Restrictions: ${restrictions}. Hates: ${dislikes}.
+
+Return this exact JSON structure:
+{
+  "days": [
+    {
+      "day": "Monday",
+      "meals": {
+        "breakfast": {"name": "", "ingredients": [], "instructions": "", "calories": 0, "protein": 0},
+        "lunch": {"name": "", "ingredients": [], "instructions": "", "calories": 0, "protein": 0},
+        "dinner": {"name": "", "ingredients": [], "instructions": "", "calories": 0, "protein": 0},
+        "snack": {"name": "", "ingredients": [], "instructions": "", "calories": 0, "protein": 0}
+      }
+    }
+  ]
+}
+Return JSON only, no markdown, no backticks, no explanation.`,
       }],
     });
 
