@@ -27,31 +27,6 @@ function calculateCalories(weight, goal) {
   return Math.round(w * 14);
 }
 
-async function callMealPlanAPI(formData) {
-  const userData = {
-    age:          formData.age,
-    weight:       formData.weight,
-    height:       formData.height,
-    goal:         GOALS.find(g => g.id === formData.goal)?.label?.toLowerCase() || formData.goal,
-    calories:     calculateCalories(formData.weight, formData.goal),
-    restrictions:
-      formData.dietaryRestrictions.length === 0 || formData.dietaryRestrictions.includes('none')
-        ? 'none'
-        : formData.dietaryRestrictions.map(r => r.replace('_', '-')).join(', '),
-    dislikes: formData.foodsIHate.trim() || 'none',
-  };
-
-  const response = await fetch('/api/generate-meal-plan', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || `Request failed ${response.status}`);
-  const mealPlan = data;
-  return mealPlan;
-}
 
 // ── Components ──────────────────────────────────────────────────────────────
 
@@ -347,10 +322,28 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const plan = await callMealPlanAPI(data);
-      setMealPlan(plan);
-      console.log('User data:', data);
-      console.log('Generated meal plan:', plan);
+      const userData = {
+        age:          data.age,
+        weight:       data.weight,
+        height:       data.height,
+        goal:         GOALS.find(g => g.id === data.goal)?.label?.toLowerCase() || data.goal,
+        calories:     calculateCalories(data.weight, data.goal),
+        restrictions:
+          data.dietaryRestrictions.length === 0 || data.dietaryRestrictions.includes('none')
+            ? 'none'
+            : data.dietaryRestrictions.map(r => r.replace('_', '-')).join(', '),
+        dislikes: data.foodsIHate.trim() || 'none',
+      };
+
+      const response = await fetch('/api/generate-meal-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+
+      const responseData = await response.json();
+      console.log('API response:', responseData);
+      setMealPlan(responseData);
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Check your API key and try again.');
