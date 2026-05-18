@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     const { age, weight, height, goal, calories, restrictions, dislikes } = req.body;
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 4000,
       messages: [{
         role: 'user',
