@@ -27,36 +27,33 @@ function calculateCalories(weight, goal) {
   return Math.round(w * 14);
 }
 
-async function callMealPlanAPI(data) {
-  const goal        = GOALS.find(g => g.id === data.goal)?.label?.toLowerCase() || data.goal;
-  const calories    = calculateCalories(data.weight, data.goal);
-  const restrictions =
-    data.dietaryRestrictions.length === 0 || data.dietaryRestrictions.includes('none')
-      ? 'none'
-      : data.dietaryRestrictions.map(r => r.replace('_', '-')).join(', ');
-  const dislikes    = data.foodsIHate.trim() || 'none';
+async function callMealPlanAPI(formData) {
+  const userData = {
+    age:          formData.age,
+    weight:       formData.weight,
+    height:       formData.height,
+    goal:         GOALS.find(g => g.id === formData.goal)?.label?.toLowerCase() || formData.goal,
+    calories:     calculateCalories(formData.weight, formData.goal),
+    restrictions:
+      formData.dietaryRestrictions.length === 0 || formData.dietaryRestrictions.includes('none')
+        ? 'none'
+        : formData.dietaryRestrictions.map(r => r.replace('_', '-')).join(', '),
+    dislikes: formData.foodsIHate.trim() || 'none',
+  };
 
-  const res = await fetch('/api/generate-meal-plan', {
+  const response = await fetch('/api/generate-meal-plan', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      age: data.age,
-      weight: data.weight,
-      height: data.height,
-      goal,
-      calories,
-      restrictions,
-      dislikes,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
   });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error || `Request failed ${res.status}`);
-  }
+  const data = await response.json();
+  const mealPlan = typeof data.result === 'string'
+    ? JSON.parse(data.result)
+    : data.result;
 
-  const json = await res.json();
-  return JSON.parse(json.result);
+  if (!response.ok) throw new Error(data.error || `Request failed ${response.status}`);
+  return mealPlan;
 }
 
 // ── Components ──────────────────────────────────────────────────────────────
