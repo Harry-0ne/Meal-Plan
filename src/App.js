@@ -28,10 +28,26 @@ function calculateCalories(weight, goal) {
 }
 
 async function callMealPlanAPI(data) {
+  const goal        = GOALS.find(g => g.id === data.goal)?.label?.toLowerCase() || data.goal;
+  const calories    = calculateCalories(data.weight, data.goal);
+  const restrictions =
+    data.dietaryRestrictions.length === 0 || data.dietaryRestrictions.includes('none')
+      ? 'none'
+      : data.dietaryRestrictions.map(r => r.replace('_', '-')).join(', ');
+  const dislikes    = data.foodsIHate.trim() || 'none';
+
   const res = await fetch('/api/generate-meal-plan', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      age: data.age,
+      weight: data.weight,
+      height: data.height,
+      goal,
+      calories,
+      restrictions,
+      dislikes,
+    }),
   });
 
   if (!res.ok) {
@@ -39,7 +55,12 @@ async function callMealPlanAPI(data) {
     throw new Error(err?.error || `Request failed ${res.status}`);
   }
 
-  return res.json();
+  const json = await res.json();
+  let text = json.result.trim();
+  if (text.startsWith('```')) {
+    text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+  }
+  return JSON.parse(text);
 }
 
 // ── Components ──────────────────────────────────────────────────────────────
