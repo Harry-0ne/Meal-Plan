@@ -238,52 +238,75 @@ function LoadingScreen() {
   );
 }
 
-function SuccessScreen({ data, mealPlan, onReset }) {
-  const calories = calculateCalories(data.weight, data.goal);
-  const goalLabel = GOALS.find(g => g.id === data.goal)?.label || '';
+const MEAL_TYPES = [
+  { key: 'breakfast', label: 'Breakfast', icon: '🍳' },
+  { key: 'lunch',     label: 'Lunch',     icon: '🥗' },
+  { key: 'dinner',    label: 'Dinner',    icon: '🍖' },
+  { key: 'snack',     label: 'Snack',     icon: '🍎' },
+];
+
+function MealCard({ icon, label, meal }) {
+  if (!meal) return null;
+  return (
+    <div className="meal-card">
+      <div className="meal-card-header">
+        <span className="meal-card-icon">{icon}</span>
+        <span className="meal-card-type">{label}</span>
+      </div>
+      <h3 className="meal-card-name">{meal.name}</h3>
+      <ul className="meal-ingredients">
+        {(meal.ingredients || []).map((ing, i) => (
+          <li key={i}>{ing}</li>
+        ))}
+      </ul>
+      {meal.instructions && (
+        <p className="meal-instructions">{meal.instructions}</p>
+      )}
+      <div className="meal-macros">
+        <span className="macro-badge">{meal.calories} kcal</span>
+        <span className="macro-badge">{meal.protein}g protein</span>
+      </div>
+    </div>
+  );
+}
+
+function MealPlanScreen({ mealPlan, onReset }) {
+  const [activeDay, setActiveDay] = useState(0);
+  const days = mealPlan?.days || [];
+  const currentDay = days[activeDay] || {};
 
   return (
-    <div className="app">
-      <div className="card success-card">
-        <div className="card-header">
+    <div className="app meal-plan-app">
+      <div className="meal-plan-container">
+        <div className="meal-plan-header">
           <div className="logo">
             <span className="logo-icon">🥗</span>
             <span className="logo-text">MealAI</span>
           </div>
-        </div>
-        <div className="card-body">
-          <div className="success-icon-wrap">
-            <div className="success-icon">✓</div>
-          </div>
-          <h2 style={{ textAlign: 'center', marginBottom: 8 }}>Your meal plan is ready!</h2>
-          <p className="step-subtitle" style={{ textAlign: 'center', marginBottom: 24 }}>
-            Check DevTools → Console to see the full JSON.
-          </p>
-          <div className="summary-card">
-            <div className="summary-row">
-              <span className="summary-label">Days planned</span>
-              <span className="summary-value">7</span>
-            </div>
-            <div className="summary-row">
-              <span className="summary-label">Daily calories</span>
-              <span className="summary-value">{calories} kcal</span>
-            </div>
-            <div className="summary-row">
-              <span className="summary-label">Goal</span>
-              <span className="summary-value">{goalLabel}</span>
-            </div>
-            <div className="summary-row">
-              <span className="summary-label">Days in plan</span>
-              <span className="summary-value">
-                {mealPlan?.days?.length ?? Object.keys(mealPlan).filter(k => k !== 'shopping_list').length}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="card-footer" style={{ justifyContent: 'center' }}>
-          <button className="btn-secondary" onClick={onReset} type="button">
+          <button className="btn-secondary btn-sm" onClick={onReset} type="button">
             Start over
           </button>
+        </div>
+
+        <div className="day-tabs">
+          {days.map((day, i) => (
+            <button
+              key={i}
+              type="button"
+              className={`day-tab ${i === activeDay ? 'active' : ''}`}
+              onClick={() => setActiveDay(i)}
+            >
+              {day.day.slice(0, 3)}
+            </button>
+          ))}
+        </div>
+
+        <p className="day-label">{currentDay.day}</p>
+
+        <div className="meal-grid">
+          {MEAL_TYPES.map(({ key, label, icon }) => (
+            <MealCard key={key} icon={icon} label={label} meal={currentDay[key]} />
+          ))}
         </div>
       </div>
     </div>
@@ -360,7 +383,7 @@ export default function App() {
   }
 
   if (loading) return <LoadingScreen />;
-  if (mealPlan) return <SuccessScreen data={data} mealPlan={mealPlan} onReset={handleReset} />;
+  if (mealPlan) return <MealPlanScreen mealPlan={mealPlan} onReset={handleReset} />;
 
   const valid = isStepValid(step, data);
 
