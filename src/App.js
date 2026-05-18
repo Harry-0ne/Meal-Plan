@@ -27,45 +27,19 @@ function calculateCalories(weight, goal) {
   return Math.round(w * 14);
 }
 
-function formatGoalLabel(goalId) {
-  return GOALS.find(g => g.id === goalId)?.label?.toLowerCase() || goalId;
-}
-
-function formatRestrictions(dietaryRestrictions) {
-  if (!dietaryRestrictions.length || dietaryRestrictions.includes('none')) return 'none';
-  return dietaryRestrictions.map(r => r.replace('_', '-')).join(', ');
-}
-
 async function callMealPlanAPI(data) {
-  const calories = calculateCalories(data.weight, data.goal);
-  const prompt = `You are a nutrition coach. Generate a 7-day meal plan for a ${data.age} year old, ${data.weight}lbs, goal: ${formatGoalLabel(data.goal)}. Daily calories: ${calories}. Dietary restrictions: ${formatRestrictions(data.dietaryRestrictions)}. Foods they hate: ${data.foodsIHate.trim() || 'none'}. For each day provide breakfast, lunch, dinner and a snack. For each meal include: name, ingredients list, brief instructions (3-4 steps), and macros (calories, protein, carbs, fat). Also generate a consolidated shopping list grouped by category (proteins, carbs, vegetables, dairy, other). Return as a JSON object only, no other text.`;
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/api/generate-meal-plan', {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': process.env.REACT_APP_ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8192,
-      messages: [{ role: 'user', content: prompt }],
-    }),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `API error ${res.status}`);
+    throw new Error(err?.error || `Request failed ${res.status}`);
   }
 
-  const json = await res.json();
-  let text = json.content[0].text.trim();
-  if (text.startsWith('```')) {
-    text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-  }
-  return JSON.parse(text);
+  return res.json();
 }
 
 // ── Components ──────────────────────────────────────────────────────────────
