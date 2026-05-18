@@ -48,11 +48,8 @@ async function callMealPlanAPI(formData) {
   });
 
   const data = await response.json();
-  const mealPlan = typeof data.result === 'string'
-    ? JSON.parse(data.result)
-    : data.result;
-
   if (!response.ok) throw new Error(data.error || `Request failed ${response.status}`);
+  const mealPlan = data;
   return mealPlan;
 }
 
