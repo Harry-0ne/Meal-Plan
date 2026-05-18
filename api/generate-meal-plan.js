@@ -21,7 +21,7 @@ Person: ${age} years old, ${weight}lbs, goal: ${goal}, ${calories} calories/day,
 
 Use exactly this structure:
 {"days":[{"day":"Monday","breakfast":{"name":"","ingredients":[""],"instructions":"","calories":0,"protein":0},"lunch":{"name":"","ingredients":[""],"instructions":"","calories":0,"protein":0},"dinner":{"name":"","ingredients":[""],"instructions":"","calories":0,"protein":0},"snack":{"name":"","ingredients":[""],"instructions":"","calories":0,"protein":0}}]}`
-    }]);
+    }]});
 
     const text = message.content[0].text.trim();
     const start = text.indexOf('{');
